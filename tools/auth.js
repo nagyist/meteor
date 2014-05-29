@@ -1107,3 +1107,5 @@ exports.loginWithTokenOrOAuth = function (conn, url, domain, sessionType) {
 
   setUpOnReconnect();
 };
+
+exports.loggedInAccountsConnection = loggedInAccountsConnection;
