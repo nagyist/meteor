@@ -194,6 +194,10 @@ ConstraintSolver.ConstraintsList.prototype.edgeMatchingVersionsFor = function (
   var impossible = false;
 
   self.forPackage(packageName, function (c) {
+    if (packageName === "livedata#web.browser") {
+      console.log("HI THERE", c.toString(), JSON.stringify(c))
+    }
+
     // Short circuit if we've already found an exact match or a contradiction.
     if (exactConstraint || impossible)
       return;
@@ -214,6 +218,9 @@ ConstraintSolver.ConstraintsList.prototype.edgeMatchingVersionsFor = function (
 
     if (c.type === "compatible-with") {
       var uv = resolver.getUnitVersion(packageName, c.version);
+      if (packageName === "livedata#web.browser") {
+        console.log("OH HI", uv)
+      }
       if (uv) {
         if (earliestCompatibleVersion &&
             earliestCompatibleVersion !== uv.earliestCompatibleVersion) {

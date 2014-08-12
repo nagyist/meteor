@@ -59,7 +59,9 @@ ConstraintSolver.PackagesResolver.prototype._loadPackageInfo = function (
   var self = this;
   // XXX is sortedness actually relevant? is there a minor optimization here
   //     where we can only talk to self.catalog once?
+  if (packageName === "livedata") console.log("LOADING LIVEDATA")
   var sortedVersions = self.catalog.getSortedVersions(packageName);
+  if (packageName === "livedata") console.log("LOADING LIVEDATA@", sortedVersions)
   // XXX throw error if the package doesn't exist?
   _.each(sortedVersions, function (version) {
     var versionDef = self.catalog.getVersion(packageName, version);

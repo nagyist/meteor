@@ -101,9 +101,10 @@ ConstraintSolver.Resolver.prototype.resolve =
   }, options);
 
   // required for error reporting later
+  ensureMoriLoaded();
   var constraintAncestor = {};
   _.each(constraints, function (c) {
-    constraintAncestor[c.toString()] = c.name;
+    constraintAncestor[c.toString()] = mori.list(c.name);
   });
 
   dependencies = ConstraintSolver.DependenciesList.fromArray(dependencies);
@@ -243,9 +244,13 @@ ConstraintSolver.Resolver.prototype._stateNeighbors =
     _.each(violatedConstraints, function (c) {
       if (directDepsString !== "")
         directDepsString += ", ";
-      directDepsString += constraintAncestor[c.toString()] +
-        "(" + c.toString() + ")";
+      var cAsString = c.toString();
+      directDepsString += mori.into_array(
+        constraintAncestor[c.toString()]).join("<=");
+      directDepsString += "(" + c.toString() + ")";
     });
+
+    directDepsString += "[[[" + constraints.toString() + "]]]"
 
     return {
       success: false,
@@ -387,42 +392,49 @@ ConstraintSolver.Resolver.prototype._propagateExactTransDeps =
     }
     // for error reporting
     uv.constraints.each(function (c) {
-      if (! constraintAncestor[c.toString()])
-        constraintAncestor[c.toString()] = constr ? constraintAncestor[constr.toString()] : uv.name;
+      var cAsString = c.toString();
+      if (! constraintAncestor[cAsString]) {
+        if (constr && constraintAncestor[constr.toString()]) {
+          constraintAncestor[cAsString] = mori.cons(
+            uv.name, constraintAncestor[constr.toString()])
+        } else {
+          constraintAncestor[cAsString] = mori.list(uv.name);
+        }
+      }
     });
   }
 
-  // Update the constraintAncestor table
-  _.each(choices, function (uv) {
-    if (oldChoice[uv.name])
-      return;
+  // // Update the constraintAncestor table
+  // _.each(choices, function (uv) {
+  //   if (oldChoice[uv.name])
+  //     return;
 
-    var relevantConstraint = null;
-    constraints.forPackage(uv.name, function (c) { relevantConstraint = c; });
+  //   var relevantConstraint = null;
+  //   constraints.forPackage(uv.name, function (c) { relevantConstraint = c; });
 
-    var rootAnc = null;
-    if (relevantConstraint) {
-      rootAnc = constraintAncestor[relevantConstraint.toString()];
-    } else {
-      // XXX this probably only works correctly when uv was a root dependency
-      // w/o a constraint or dependency of one of the root deps.
-      _.each(choices, function (choice) {
-        if (rootAnc)
-          return;
+  //   var rootAnc = null;
+  //   if (relevantConstraint) {
+  //     rootAnc = constraintAncestor[relevantConstraint.toString()];
+  //   } else {
+  //     // XXX this probably only works correctly when uv was a root dependency
+  //     // w/o a constraint or dependency of one of the root deps.
+  //     _.each(choices, function (choice) {
+  //       if (rootAnc)
+  //         return;
 
-        if (choice.dependencies.contains(uv.name))
-          rootAnc = choice.name;
-      });
+  //       if (choice.dependencies.contains(uv.name))
+  //         rootAnc = choice.name;
+  //     });
 
-      if (! rootAnc)
-        rootAnc = uv.name;
-    }
+  //     if (! rootAnc)
+  //       rootAnc = uv.name;
+  //   }
 
-    uv.constraints.each(function (c) {
-      if (! constraintAncestor[c.toString()])
-        constraintAncestor[c.toString()] = rootAnc;
-    });
-  });
+  //   uv.constraints.each(function (c) {
+  //     if (! constraintAncestor[c.toString()])
+  //       constraintAncestor[c.toString()] = rootAnc;
+  //   });
+  // });
 
   return {
     dependencies: dependencies,
